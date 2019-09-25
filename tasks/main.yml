@@ -1,0 +1,46 @@
+- name: Install Java runtime
+  apt: name=openjdk-8-jre state=present
+
+- name: Create Directory
+  file:
+    path: "{{ dir }}"
+    state: directory
+  become_user: "{{ user }}"
+
+- name: Download Minecraft
+  get_url:
+    url: "{{ url }}"
+    dest: "{{ dir }}/minecraft_server.{{ version }}.jar"
+    checksum: "sha1:{{ sha1_hash }}"
+  become_user: "{{ user }}"
+
+#- name: Deploy Start Script
+#  template:
+#    src: mc-start.sh.j2
+#    dest: "{{ dir }}/mc-start.sh"
+#    owner: "{{ user }}"
+#    group: "{{ user }}"
+
+- name: Deploy Service
+  template:
+    src: minecraft.service.j2
+    dest: "/etc/systemd/system/minecraft.service"
+
+- name: Agree to Mojang's EULA
+  template:
+    src: eula.txt.j2
+    dest: "{{ dir }}/eula.txt"
+  become_user: "{{ user }}"
+
+#- name: Start Service
+#  service: name=minecraft state=started
+
+- name: Start Service
+  command: service minecraft start
+
+
+# - name: Start Minecraft
+#   command: "bash {{ dir }}/mc-start.sh"
+#   become_user: "{{ user }}"
+#   args:
+#     chdir: "{{ dir }}"
