@@ -1,5 +1,5 @@
-- name: Install Java runtime
-  apt: name=openjdk-8-jre state=present
+- import_tasks: java.yml
+  tags: java
 
 - name: Create Directory
   file:
