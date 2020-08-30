@@ -1,46 +1,58 @@
-- name: Install Java runtime
-  apt: name=openjdk-8-jre state=present
+- import_tasks: java.yml
+  tags: java
 
-- name: Create Directory
+- name: Create Minecraft user
+  user:
+    name: "{{ minecraft_user }}"
+    home: "{{ minecraft_dir }}"
+    skeleton: /etc/skel
+    shell: /bin/bash
+
+- name: Create Minecraft directories
   file:
-    path: "{{ dir }}"
+    path: "{{ item }}"
+    owner: "{{ minecraft_user }}"
     state: directory
-  become_user: "{{ user }}"
+  loop:
+    - "{{ minecraft_jars }}"
+    - "{{ minecraft_root }}"
 
-- name: Download Minecraft
+- name: Download Minecraft server
   get_url:
-    url: "{{ url }}"
-    dest: "{{ dir }}/minecraft_server.{{ version }}.jar"
-    checksum: "sha1:{{ sha1_hash }}"
-  become_user: "{{ user }}"
+    url: "{{ minecraft_url }}"
+    dest: "{{ minecraft_server }}"
+    checksum: "sha1:{{ minecraft_sha1 }}"
+    owner: "{{ minecraft_user }}"
+    mode: 0600
 
-#- name: Deploy Start Script
-#  template:
-#    src: mc-start.sh.j2
-#    dest: "{{ dir }}/mc-start.sh"
-#    owner: "{{ user }}"
-#    group: "{{ user }}"
+- name: Link Minecraft server jar
+  file:
+    src: "{{ minecraft_server }}"
+    dest: "{{ minecraft_root }}/server.jar"
+    owner: "{{ minecraft_user }}"
+    state: link
 
-- name: Deploy Service
+- name: Deploy Minecraft start script
+  template:
+    src: start.sh.j2
+    dest: "{{ minecraft_root }}/start.sh"
+    owner: "{{ minecraft_user }}"
+    mode: 0700
+
+- name: Deploy Minecraft service
   template:
     src: minecraft.service.j2
     dest: "/etc/systemd/system/minecraft.service"
+    mode: 0600
 
 - name: Agree to Mojang's EULA
   template:
     src: eula.txt.j2
-    dest: "{{ dir }}/eula.txt"
-  become_user: "{{ user }}"
+    dest: "{{ minecraft_root }}/eula.txt"
+    owner: "{{ minecraft_user }}"
+    mode: 0600
 
-#- name: Start Service
-#  service: name=minecraft state=started
-
-- name: Start Service
-  command: service minecraft start
-
-
-# - name: Start Minecraft
-#   command: "bash {{ dir }}/mc-start.sh"
-#   become_user: "{{ user }}"
-#   args:
-#     chdir: "{{ dir }}"
+- name: Start Minecraft service
+  service:
+    name: minecraft
+    state: started

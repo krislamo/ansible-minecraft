@@ -1,0 +1,9 @@
+minecraft_dir: /opt/minecraft
+minecraft_eula: "no"
+minecraft_jars: "{{ minecraft_dir }}/jars"
+minecraft_root: "{{ minecraft_dir }}/server"
+minecraft_server: "{{ minecraft_jars }}/minecraft_server-{{ minecraft_version }}.jar"
+minecraft_sha1: bb2b6b1aefcd70dfd1892149ac3a215f6c636b07
+minecraft_url: https://launcher.mojang.com/v1/objects/{{ minecraft_sha1 }}/server.jar
+minecraft_user: minecraft
+minecraft_version: 1.15.2
